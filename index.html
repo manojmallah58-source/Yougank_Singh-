@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>YOUGANK SINGH - Elite Streaming</title>
+  
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;800&family=Outfit:wght@400;700&family=Bebas+Neue&family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root { --gold: #FFD700; --bg: #000; --red: #b30000; --dark: #222; --border: rgba(255,255,255,0.07); }
+    * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+    body { background: var(--bg); font-family: 'Outfit', sans-serif; color: #fff; padding-bottom: 20px; overflow-x: hidden; min-height: 100vh; width: 100%; }
+
+    header { height: 60px; background: #000; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 1000; }
+    .logo-img { height: 42px; width: auto; }
+
+    /* LOCKED STAGE EFFECT */
+    #main-stage { width: 100%; position: relative; transition: filter 0.3s ease; }
+    #main-stage.locked .video-box {
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .video-box { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; }
+    iframe { width: 100%; height: 100%; border: none; display: block; position: absolute; top: 0; left: 0; }
+
+    .actions { padding: 12px 12px; width: 100%; max-width: 100%; overflow: hidden; }
+    .btn-action { 
+        display: block; width: 100%; padding: 13px; background: linear-gradient(180deg, #d32f2f, #8b0000); 
+        color: #fff; border: 1px solid #ff5252; font-weight: 800; border-radius: 6px; font-size: 16px; 
+        text-transform: uppercase; text-decoration: none; text-align: center; cursor: pointer; 
+        transition: 0.2s; box-shadow: 0 3px 0 #5e0000; margin-bottom: 10px;
+    }
+    .btn-action:active { transform: translateY(3px); box-shadow: none; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .small-btn { 
+        background: linear-gradient(180deg, #444, #222); border: 1px solid #555; color: #fff; 
+        padding: 11px; border-radius: 6px; text-decoration: none; font-size: 13px; 
+        font-weight: 700; display: flex; align-items: center; justify-content: center; 
+        gap: 6px; transition: 0.2s; box-shadow: 0 2px 0 #111; cursor: pointer;
+    }
+    .small-btn:active { transform: translateY(2px); box-shadow: none; }
+    
+    .stats { 
+        background: linear-gradient(180deg, #ffd700, #b8860b); color: #000; border-radius: 6px; 
+        padding: 13px; text-align: center; font-weight: 800; font-family: 'Rajdhani', sans-serif; 
+        font-size: 20px; text-transform: uppercase; box-shadow: 0 3px 0 #8b6508;
+    }
+
+    /* ERROR & LOADING SCREENS */
+    #loading-screen {
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 20px; z-index: 9999;
+    }
+    .load-logo { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 6px; }
+    .load-logo span { color: #d32f2f; }
+
+    #error-screen {
+      display: none; position: fixed; inset: 0; background: var(--bg);
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 12px; z-index: 9998; padding: 24px; text-align: center;
+    }
+    #error-screen h2 { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 4px; color: #d32f2f; }
+    #error-screen p { color: #777; font-size: 14px; line-height: 1.6; }
+
+    /* COMPULSORY FORCE POPUP */
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.88); backdrop-filter: blur(10px);
+      z-index: 9000; justify-content: center; align-items: center; padding: 20px;
+    }
+    .overlay.active { display: flex; }
+    .popup {
+      background: #111; border: 1px solid #333; border-radius: 20px;
+      padding: 30px 20px; width: 100%; max-width: 420px; text-align: center;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+      animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes popIn { from{transform:scale(0.88) translateY(20px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
+    .popup-icon {
+      width: 52px; height: 52px; background: linear-gradient(135deg, #0088cc, #006aab);
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 18px; box-shadow: 0 8px 24px rgba(0,136,204,0.35);
+    }
+    .popup-icon svg { width: 26px; height: 26px; fill: #fff; }
+    .accent-line { width: 36px; height: 3px; background: #d32f2f; border-radius: 2px; margin: 0 auto 14px; }
+    .popup-brand { font-family: 'Bebas Neue', sans-serif; font-size: 30px; letter-spacing: 5px; color: #fff; margin-bottom: 8px; }
+    .popup p { color: #ccc; font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
+    .btn-join {
+      width: 100%; padding: 14px; background: linear-gradient(135deg,#0088cc,#006aab);
+      border: none; color: #fff; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,136,204,0.4); text-transform: uppercase; letter-spacing: 0.5px;
+    }
+
+    /* AD BANNER */
+    .ad-section-wrapper {
+      margin-top: 10px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+    .elite-ad-banner {
+      width: 100%;
+      max-width: 100%;
+      background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7), 0 0 15px rgba(16, 185, 129, 0.2);
+      border: 1.5px solid rgba(16, 185, 129, 0.4);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .elite-video-side {
+      width: 100%;
+      max-height: 140px;
+      aspect-ratio: 16/9;
+      background: #000;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .elite-video-side video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+      display: block;
+    }
+    .live-badge {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      background: #dc2626;
+      color: #ffffff;
+      font-size: 7px;
+      font-weight: 900;
+      padding: 1.5px 4px;
+      border-radius: 2px;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.6);
+      z-index: 2;
+    }
+    .pulsing-dot {
+      width: 4px;
+      height: 4px;
+      background: #fff;
+      border-radius: 50%;
+      animation: dotBlink 0.8s infinite;
+    }
+    @keyframes dotBlink {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .elite-content-side {
+      width: 100%;
+      padding: 8px 10px;
+      text-align: center;
+    }
+    .sub-tag {
+      color: #f59e0b;
+      font-size: 7.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+      display: block;
+    }
+    .elite-content-side h3 {
+      color: #ffffff;
+      font-size: 11.5px;
+      font-weight: 800;
+      margin-bottom: 2px;
+      line-height: 1.2;
+      font-family: 'Inter', sans-serif;
+    }
+    .elite-content-side h3 span {
+      color: #38bdf8;
+      background: linear-gradient(90deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .description {
+      color: #94a3b8;
+      font-size: 9px;
+      margin-bottom: 6px;
+      line-height: 1.2;
+    }
+    .elite-cta-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      width: 100%;
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      color: #ffffff;
+      text-decoration: none;
+      padding: 7px 10px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOADING SCREEN -->
+  <div id="loading-screen">
+    <div class="load-logo">YOUGANK <span>SINGH</span></div>
+    <p style="font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #666;">Connecting stream...</p>
+  </div>
+
+  <!-- ERROR SCREEN -->
+  <div id="error-screen">
+    <h2>Stream Offline</h2>
+    <p id="error-msg">This stream is currently unavailable.<br>The link may have expired.</p>
+    <a href="javascript:location.reload()" class="btn-action" style="max-width: 200px; margin-top: 10px;">Retry</a>
+  </div>
+
+  <header>
+    <img src="https://i.ibb.co/HLkW7zJV/ei-1765534270242-removebg-preview.png" alt="Logo" class="logo-img">
+  </header>
+
+  <!-- MAIN STAGE -->
+  <div id="main-stage">
+    <div class="video-box">
+      <iframe id="main-player" allowfullscreen="true" scrolling="no" allow="autoplay; encrypted-media"></iframe>
+    </div>
+  </div>
+
+  <div class="actions">
+    <a href="https://t.me/addlist/9JrVYzkf9Ao2ZGE1" target="_blank" onclick="verifyAccess()" class="btn-action">CLICK FOLLOW TELEGRAM</a>
+    <div class="grid">
+      <button onclick="location.reload()" class="small-btn"><i class="material-icons">refresh</i> REFRESH</button>
+      <button onclick="shareLink()" class="small-btn"><i class="material-icons">share</i> SHARE</button>
+    </div>
+    <div class="stats" id="live-count">TODAY'S WATCHING - ...</div>
+
+    <!-- AD BANNER -->
+    <div class="ad-section-wrapper">
+      <div class="elite-ad-banner">
+        <div class="elite-video-side">
+          <div class="live-badge">
+            <div class="pulsing-dot"></div> LIVE
+          </div>
+          <video id="lootVideo" autoplay muted playsinline>
+            <source src="https://files.catbox.moe/ht250d.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+
+        <div class="elite-content-side">
+          <span class="sub-tag">⚡ FLASH SALE • 90% OFF</span>
+          <h3>Grab Secret <span>Loot Deals</span> Now!</h3>
+          <p class="description">Hidden price drops & bug offers active right now.</p>
+          
+          <a href="https://t.me/+dXBfsd_sqlU1YWY1" target="_blank" class="elite-cta-button">
+            👉 Click Here To Join Now
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPULSORY FORCE POPUP -->
+  <div class="overlay" id="forcePop">
+    <div class="popup">
+      <div class="popup-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 14.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/></svg>
+      </div>
+      <div class="accent-line"></div>
+      <div class="popup-brand">YOUGANK SINGH</div>
+      <p>To watch all live matches seamlessly, joining our official Telegram channel is compulsory. Once joined, you will get free access for the next 24 hours!</p>
+      <button class="btn-join" onclick="goTelegram()">Join Telegram Now →</button>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <script>
+    const CONFIG = { key: "ys_access_v42", timeKey: "ys_time_v42", preview: 15000, expiry: 86400000 };
+    const JSON_URL = "https://raw.githubusercontent.com/manojmallah58-source/Cricket-yoddha-json/main/links.json";
+    const TELEGRAM_LINK = "https://t.me/addlist/9JrVYzkf9Ao2ZGE1";
+
+    window.onload = () => {
+      const lastJoin = localStorage.getItem(CONFIG.timeKey);
+      const now = new Date().getTime();
+      
+      if (lastJoin && (now - lastJoin < CONFIG.expiry)) {
+        document.getElementById('main-stage').classList.remove('locked');
+      } else {
+        document.getElementById('main-stage').classList.add('locked');
+        setTimeout(() => {
+          document.getElementById('forcePop').classList.add('active');
+        }, CONFIG.preview);
+      }
+      
+      loadStream();
+    };
+
+    async function loadStream() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("id");
+      
+      if (!id) {
+        showError("No stream ID provided in URL.");
+        return;
+      }
+
+      try {
+        const response = await fetch(JSON_URL + "?t=" + Date.now());
+        if (!response.ok) throw new Error("Fetch failed");
+        
+        const data = await response.json();
+        let iframeSrc = "";
+        if (data.iframes) {
+          const found = data.iframes.find(x => x.id === id);
+          if (found) iframeSrc = found.iframeSrc;
+        } else if (data.channels && data.channels[id]) {
+          iframeSrc = data.channels[id];
+        }
+
+        if (!iframeSrc) {
+          showError("Stream not found for this ID.");
+          return;
+        }
+
+        document.getElementById('main-player').src = iframeSrc;
+        document.getElementById('loading-screen').style.display = 'none';
+
+      } catch (e) {
+        showError("Failed to load stream data. Please retry.");
+      }
+    }
+
+    function showError(msg) {
+      document.getElementById('loading-screen').style.display = 'none';
+      const errScreen = document.getElementById('error-screen');
+      errScreen.style.display = 'flex';
+      document.getElementById('error-msg').innerText = msg;
+    }
+
+    function verifyAccess() {
+      localStorage.setItem(CONFIG.key, 'true');
+      localStorage.setItem(CONFIG.timeKey, new Date().getTime());
+      document.getElementById('forcePop').classList.remove('active');
+      document.getElementById('main-stage').classList.remove('locked');
+    }
+
+    function goTelegram() {
+      verifyAccess();
+      window.open(TELEGRAM_LINK, "_blank");
+    }
+
+    function shareLink() {
+      if (navigator.share) {
+        navigator.share({ title: 'Yougank Singh', url: window.location.href }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(window.location.href);
+        alert("Link copied to clipboard!");
+      }
+    }
+
+    // Loot Ad Video Loop Script
+    const lootVideo = document.getElementById('lootVideo');
+    lootVideo.addEventListener('ended', function() {
+        setTimeout(function() {
+            lootVideo.currentTime = 0;
+            lootVideo.play();
+        }, 3000);
+    });
+
+    // Modified Firebase Live Counter Setup
+    const firebaseConfig = { apiKey: "AIzaSyA-vR50CMDYJVHApJir-6fmgRqhFiqQDU8", authDomain: "my-website-cricket.firebaseapp.com", databaseURL: "https://my-website-cricket-default-rtdb.firebaseio.com", projectId: "my-website-cricket" };
+    if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    
+    const db = firebase.database();
+    const today = new Date().toISOString().slice(0, 10);
+    const params = new URLSearchParams(window.location.search);
+    const currentId = params.get("id") || "stream_node";
+    const dbRefName = "ys_analytics_node_" + currentId;
+    
+    const ref = db.ref('stats_counters/' + dbRefName + '/' + today);
+    ref.transaction(v => (v || 0) + 1);
+    ref.on('value', snap => { 
+      document.getElementById('live-count').innerText = "TODAY'S WATCHING - " + (snap.val() || 0).toLocaleString(); 
+    });
+  </script>
+</body>
+</html>
